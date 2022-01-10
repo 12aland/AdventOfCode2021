@@ -1,30 +1,46 @@
+# Creates Board
 class Board:
-    def __init__(self,boardArray):
-        self.boardArray = boardArray
-        print(self.boardArray)
+    def __init__(self):
+        self.num2coordict = {}
+        self.indexdict = {}
+        self.rows = []
+
+    def addRow(self, row):
+        ycoord = len(self.rows)
+        self.num2coordict.update({key: (xcoord, ycoord) for xcoord, key in enumerate(row)})
+        self.rows.append(row)
+
+    def check(self):
+        return True
+
 
 with open('input.txt') as f:
     lines = f.read().splitlines()
 
 numbers = lines.pop(0)
-boards = []
-temp = []
-for lineNum in range(1,len(lines)+1):
-    if not lineNum%6 == 0:
-        temp.append([int(x) for x in lines[lineNum].split()])
-        #temp.append([lines[lineNum]])
-    else:
-        boards.append(Board(temp))
-        temp = []
+lines.pop(0)
+boardList = []
+boardIndexes = []
+numdict = {}
+board = Board()
 
-#print(lines[1].split())
-#boards.append(temp)
+for lineNum, line in enumerate(lines, start=1):
+    if lineNum % 6 == 0:
+        boardList.append(board)
+        board = Board()
 
-z = [[3,2]]
+    elif not lineNum % 6 == 0:
+        boardLine = [int(x) for x in line.split()]
+        for num in boardLine:
+            boardIndexes = numdict.setdefault(num, [])
+            boardIndexes.append(int(lineNum / 6))
+            numdict.update({num: boardIndexes})
+        board.addRow(boardLine)
 
-if 2 in z:
-    print('aa')
+boardList.append(board)
 
+print(numdict)
 print(numbers.split())
 
-print()
+for board in boardList:
+    print(board.num2coordict)
