@@ -1,66 +1,105 @@
+import copy
+
+# Creates Board
+class Board:
+    def __init__(self):
+        self.num2coordict = {}
+        self.xdict = {}
+        self.ydict = {}
+        self.listofdicts = [self.xdict, self.ydict]
+        self.solved = False
+        self.rows = []
+        self.tempBoard = []
+
+    def addRow(self, row):
+        ycoord = len(self.rows)
+        self.num2coordict.update({key: (xcoord, ycoord) for xcoord, key in enumerate(row)})
+        self.rows.append(row)
+
+    def addCoords(self, x, y, list):
+        xcount = list[0].setdefault(x, 0)
+        xcount += 1
+        list[0].update({x: xcount})
+        ycount = list[1].setdefault(y, 0)
+        ycount += 1
+        list[1].update({y: ycount})
+
+    def markNum(self, num):
+        if not self.solved:
+            x, y = self.num2coordict.get(num)
+            self.tempBoard[y][x] = 0
+            self.addCoords(x, y, self.listofdicts)
+            if self.check():
+                print(self.answer(num))
+                return True
+        else:
+            return False
+
+    def check(self):
+        for dict in self.listofdicts:
+            if 5 in dict.values():
+                self.solved = True
+                return True
+
+    def answer(self, lastnum):
+        counter = 0
+        for rows in self.tempBoard:
+            for num in rows:
+                counter += num
+        print('Last Num is', lastnum)
+        return lastnum * counter
+
+    def showBoards(self):
+        for row in self.rows:
+            print(row)
+        print('-----------------------------')
+        for row in self.tempBoard:
+            print(row)
+
+    def finalize(self):
+        self.tempBoard = copy.deepcopy(self.rows)
+
+
 with open('input.txt') as f:
     lines = f.read().splitlines()
 
-oxygen = ''
-co2 = ''
+numbers = lines.pop(0)
+# numbers = numbers.split(',')
+numbers = [int(x) for x in numbers.split(',')]
+lines.pop(0)
+boardList = []
+winnerList = []
+boardIndexes = []
+numdict = {}
+board = Board()
+for lineNum, line in enumerate(lines, start=1):
+    if lineNum % 6 == 0:
+        board.finalize()
+        boardList.append(board)
+        board = Board()
 
-can = lines
+    elif not lineNum % 6 == 0:
+        boardLine = [int(x) for x in line.split()]
+        for num in boardLine:
+            boardIndexes = numdict.setdefault(num, [])
+            boardIndexes.append(int(lineNum / 6))
+            numdict.update({num: boardIndexes})
+        board.addRow(boardLine)
 
-for index in range(0, len(can[0])):
-    ztemp = []
-    otemp = []
-    zero = 0
-    one = 0
-
-    if len(can) == 1:
-        break
-
-    for line in can:
-        if line[index] == '0':
-            zero += 1
-            ztemp.append(line)
-        elif line[index] == '1':
-            one += 1
-            otemp.append(line)
-
-    if zero > one:
-        can = ztemp
-    elif one >= zero:
-        can = otemp
-
-oxygen = can
-can = lines
-
-for index in range(0, len(can[0])):
-    ztemp = []
-    otemp = []
-    zero = 0
-    one = 0
-
-    if len(can) == 1:
-        break
+board.finalize()
+boardList.append(board)
+board = Board()
 
 
-    for line in can:
-        if line[index] == '0':
-            zero += 1
-            ztemp.append(line)
-        elif line[index] == '1':
-            one += 1
-            otemp.append(line)
+# for board in boardList:
+# print(numdict)
 
-    if zero <= one:
-        can = ztemp
-    elif one < zero:
-        can = otemp
+def marker():
+    for callNum in numbers:  # Go through the Bingo Line
+        for indexNum in numdict.get(callNum):  # Find the Boards from the Dictionary
+            if boardList[indexNum].markNum(callNum):  # Mark the numbers on the board
+                winnerList.append(boardList[indexNum])
 
+marker()
 
-co2 = can
-
-
-
-
-print('Oxygen:', oxygen, int(oxygen[0], 2))
-print('Co2:', co2, int(co2[0], 2))
-print('Consumption:', int(oxygen[0], 2) * int(co2[0], 2))
-
+winnerList[len(winnerList)-1].showBoards()
